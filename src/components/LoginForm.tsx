@@ -9,16 +9,14 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Form State
-  const [loginIdentifier, setLoginIdentifier] = useState(""); // Stores Email or Mobile
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaCode, setCaptchaCode] = useState(""); // The actual code generated
   
   // Validation Errors
-  const [identifierError, setIdentifierError] = useState("");
+  const [usernameError, setUsernameError] = useState("");
   const [captchaError, setCaptchaError] = useState("");
-  
-  // Array to store multiple password error messages
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,7 +55,6 @@ const LoginForm = () => {
         const xGap = canvas.width / 7;
         for (let i = 0; i < code.length; i++) {
             ctx.save();
-            // Random slight rotation
             const angle = (Math.random() - 0.5) * 0.4;
             ctx.translate(xGap * (i + 1), canvas.height / 2);
             ctx.rotate(angle);
@@ -65,7 +62,7 @@ const LoginForm = () => {
             ctx.restore();
         }
 
-        // Draw Interference Lines
+        // Draw Noise Lines
         for (let i = 0; i < 7; i++) {
             ctx.strokeStyle = `rgba(100, 100, 100, ${Math.random() * 0.5})`;
             ctx.lineWidth = 1.5;
@@ -86,44 +83,21 @@ const LoginForm = () => {
 
   // --- HANDLERS ---
 
-  // Unified Handler for Email OR Mobile
-  const handleIdentifierChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-
-    // 1. Remove ANY spaces immediately
-    val = val.replace(/\s/g, '');
-
-    // 2. Check if user is typing a Number (Mobile logic)
-    // We check if the FIRST character is a digit to decide "Phone Mode"
-    const isNumberMode = /^\d/.test(val);
-
-    if (isNumberMode) {
-      // Allow only numbers, max 10 digits
-      val = val.replace(/[^0-9]/g, '').slice(0, 10);
-      setIdentifierError(val.length === 10 ? "" : "Mobile number must be 10 digits");
-    } else {
-      // Email Mode: Just ensure no spaces (already done)
-      // Simple validation for error message (requires @ and .)
-      if (val.length > 0 && (!val.includes('@') || !val.includes('.'))) {
-        setIdentifierError("Please enter a valid email address");
-      } else {
-        setIdentifierError("");
-      }
-    }
-
-    setLoginIdentifier(val);
+  // Username Handler: No spaces allowed
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\s/g, ''); // Block spaces
+    setUsername(val);
+    if (val.length > 0) setUsernameError("");
   };
 
-  // Password Handler: Blocks spaces immediately & Clears errors on type
+  // Password Handler: No spaces allowed
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\s/g, ''); // Logic: No spaces allowed
+    const val = e.target.value.replace(/\s/g, ''); // Block spaces
     setPassword(val);
-    
-    // Clear errors when user starts typing again so they can fix it without red text
     if (passwordErrors.length > 0) setPasswordErrors([]);
   };
 
-  // Helper Function: Checks all password requirements
+  // Password Validation Helper
   const getPasswordValidationErrors = (pwd: string) => {
     const errors = [];
     if (pwd.length < 6) {
@@ -138,9 +112,7 @@ const LoginForm = () => {
     return errors;
   };
 
-  // Validate on Blur (Clicking out of the box)
   const handlePasswordBlur = () => {
-    // Only validate if they have typed something
     if (password.length > 0) {
         const errors = getPasswordValidationErrors(password);
         setPasswordErrors(errors);
@@ -150,13 +122,13 @@ const LoginForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. Validate Identifier
-    if (!loginIdentifier || identifierError) {
-        setIdentifierError(identifierError || "Please enter a valid Email or Mobile Number");
+    // 1. Validate Username
+    if (!username) {
+        setUsernameError("Username is required");
         return;
     }
 
-    // 2. Validate Password (Final check before submit)
+    // 2. Validate Password
     const pwdErrors = getPasswordValidationErrors(password);
     if (pwdErrors.length > 0) {
         setPasswordErrors(pwdErrors);
@@ -166,7 +138,7 @@ const LoginForm = () => {
     // 3. Validate Captcha
     if (captchaInput !== captchaCode) {
         setCaptchaError("Incorrect Captcha. Please try again.");
-        generateCaptcha(); // Refresh on fail to prevent brute force
+        generateCaptcha();
         return;
     }
 
@@ -182,30 +154,30 @@ const LoginForm = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="font-serif text-3xl font-medium text-foreground mb-2">
-          Welcome Back
+          Log in to your account
         </h2>
         <p className="text-muted-foreground text-sm">
-          Sign in to access your enterprise dashboard
+          Enter your credentials to access your ERP dashboard
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-1.5">
         
-        {/* Email OR Mobile Field */}
+        {/* Username Field */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">
-            Email or Mobile Number
+            Username
           </label>
           <Input
             type="text" 
-            value={loginIdentifier}
-            onChange={handleIdentifierChange}
-            placeholder="user@example.com or 9876543210"
-            className={`h-12 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 ${identifierError ? "border-red-500 focus:ring-red-200" : ""}`}
+            value={username}
+            onChange={handleUsernameChange}
+            placeholder="Enter your username"
+            className={`h-12 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 ${usernameError ? "border-red-500 focus:ring-red-200" : ""}`}
           />
-          {identifierError && loginIdentifier.length > 0 && (
-            <p className="text-xs text-red-500">{identifierError}</p>
+          {usernameError && (
+            <p className="text-xs text-red-500">{usernameError}</p>
           )}
         </div>
 
@@ -232,7 +204,7 @@ const LoginForm = () => {
             </button>
           </div>
           
-          {/* Validation Feedback: Shows Gray helper text OR Red Error List */}
+          {/* Validation Feedback */}
           {passwordErrors.length > 0 ? (
             <div className="text-xs text-red-500 font-medium mt-1 space-y-1">
                 <p>Password missing:</p>
@@ -262,7 +234,7 @@ const LoginForm = () => {
                         width="140" 
                         height="48" 
                         className="cursor-pointer"
-                        onClick={generateCaptcha} // Allow click on image to refresh too
+                        onClick={generateCaptcha}
                         title="Click to refresh captcha"
                     />
                 </div>
@@ -321,13 +293,12 @@ const LoginForm = () => {
           {isLoading ? "Signing In..." : "Sign In"}
         </Button>
 
-        {/* Footer Links with Separator */}
+        {/* Footer Links */}
         <div className="flex items-center justify-center text-sm pt-4">
           <a href="#" className="text-primary hover:text-primary/80 hover:underline font-medium">
             Create Account
           </a>
           
-          {/* The Separator */}
           <span className="mx-3 text-muted-foreground/30 text-lg font-light">|</span>
           
           <a href="#" className="text-primary hover:text-primary/80 hover:underline font-medium">
@@ -336,6 +307,8 @@ const LoginForm = () => {
         </div>
 
       </form>
+
+      
     </div>
   );
 };

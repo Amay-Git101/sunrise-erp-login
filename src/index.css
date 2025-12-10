@@ -110,7 +110,8 @@
   }
 
   html, body {
-    @apply h-full overflow-hidden;
+    /* CHANGED: Removed overflow-hidden so scrollbars appear normally */
+    @apply h-full w-full;
     margin: 0;
     padding: 0;
   }

@@ -5,21 +5,29 @@ import LoginSection from "@/components/LoginSection";
 import TrustSection from "@/components/TrustSection";
 
 const Index = () => {
-  const loginRef = useRef<HTMLDivElement>(null);
+  const loginRef = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollToLogin = () => {
     loginRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const scrollToTop = () => {
+    containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="h-screen overflow-y-scroll snap-y snap-mandatory">
-      <Header onLogoClick={scrollToLogin} />
-      <HeroSection />
-      <div ref={loginRef}>
-        <LoginSection />
+    <>
+      <Header onLogoClick={scrollToTop} onLoginClick={scrollToLogin} />
+      <div 
+        ref={containerRef}
+        className="h-dvh w-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
+      >
+        <HeroSection />
+        <LoginSection ref={loginRef} />
+        <TrustSection />
       </div>
-      <TrustSection />
-    </div>
+    </>
   );
 };
 

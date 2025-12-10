@@ -109,9 +109,10 @@
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
-    scroll-snap-type: y mandatory;
+  html, body {
+    @apply h-full overflow-hidden;
+    margin: 0;
+    padding: 0;
   }
 
   body {
@@ -148,7 +149,7 @@
     left: 50%;
     width: 0;
     height: 1px;
-    background: hsl(var(--foreground));
+    background: hsl(var(--primary));
     transition: all 0.3s ease;
     transform: translateX(-50%);
   }

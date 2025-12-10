@@ -1,15 +1,16 @@
+import { forwardRef } from "react";
 import LoginForm from "./LoginForm";
 import FeatureLabels from "./FeatureLabels";
 
-const LoginSection = () => {
+const LoginSection = forwardRef<HTMLElement>((props, ref) => {
   return (
-    <section id="login" className="section-snap min-h-screen flex items-center bg-background">
+    <section ref={ref} id="login" className="section-snap min-h-screen flex items-center bg-background" {...props}>
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Side - Editorial Content */}
           <div className="lg:col-span-4 order-2 lg:order-1">
             <h3 className="font-serif text-2xl lg:text-3xl font-medium text-foreground mb-8 leading-snug">
-              Why teams rely on Sunrise ERP
+              Why teams rely on Sunrise Software Development 
             </h3>
 
             <div className="space-y-6 text-foreground/70 font-sans">
@@ -60,6 +61,8 @@ const LoginSection = () => {
       </div>
     </section>
   );
-};
+});
+
+LoginSection.displayName = "LoginSection";
 
 export default LoginSection;

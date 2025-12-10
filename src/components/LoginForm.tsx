@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Eye, EyeOff, Shield, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Shield, RefreshCw, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,12 +12,11 @@ const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [captchaInput, setCaptchaInput] = useState("");
-  const [captchaCode, setCaptchaCode] = useState(""); // The actual code generated
+  const [captchaCode, setCaptchaCode] = useState(""); 
   
   // Validation Errors
   const [usernameError, setUsernameError] = useState("");
   const [captchaError, setCaptchaError] = useState("");
-  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -29,7 +28,7 @@ const LoginForm = () => {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setCaptchaCode(code);
-    setCaptchaInput(""); // Clear user input on refresh
+    setCaptchaInput(""); 
     setCaptchaError("");
     drawCaptcha(code);
   };
@@ -42,16 +41,15 @@ const LoginForm = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Background
-        ctx.fillStyle = "#f3f4f6"; // light gray
+        ctx.fillStyle = "#f3f4f6"; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Text
         ctx.font = "bold 24px 'Courier New', monospace";
-        ctx.fillStyle = "#374151"; // dark gray text
+        ctx.fillStyle = "#374151"; 
         ctx.textBaseline = "middle";
         ctx.textAlign = "center";
         
-        // Draw text with slight spacing/rotation for "legit" look
         const xGap = canvas.width / 7;
         for (let i = 0; i < code.length; i++) {
             ctx.save();
@@ -94,29 +92,6 @@ const LoginForm = () => {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/\s/g, ''); // Block spaces
     setPassword(val);
-    if (passwordErrors.length > 0) setPasswordErrors([]);
-  };
-
-  // Password Validation Helper
-  const getPasswordValidationErrors = (pwd: string) => {
-    const errors = [];
-    if (pwd.length < 6) {
-        errors.push("At least 6 characters");
-    }
-    if (!/\d/.test(pwd)) {
-        errors.push("At least one number");
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
-        errors.push("At least one special character");
-    }
-    return errors;
-  };
-
-  const handlePasswordBlur = () => {
-    if (password.length > 0) {
-        const errors = getPasswordValidationErrors(password);
-        setPasswordErrors(errors);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -128,10 +103,9 @@ const LoginForm = () => {
         return;
     }
 
-    // 2. Validate Password
-    const pwdErrors = getPasswordValidationErrors(password);
-    if (pwdErrors.length > 0) {
-        setPasswordErrors(pwdErrors);
+    // 2. Validate Password (Simple required check only)
+    if (!password) {
+        alert("Password is required");
         return;
     }
 
@@ -144,7 +118,6 @@ const LoginForm = () => {
 
     // Success
     setCaptchaError("");
-    setPasswordErrors([]);
     setIsLoading(true);
     setTimeout(() => setIsLoading(false), 2000);
   };
@@ -169,13 +142,16 @@ const LoginForm = () => {
           <label className="text-sm font-medium text-foreground">
             Username
           </label>
-          <Input
-            type="text" 
-            value={username}
-            onChange={handleUsernameChange}
-            placeholder="Enter your username"
-            className={`h-12 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 ${usernameError ? "border-red-500 focus:ring-red-200" : ""}`}
-          />
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                type="text" 
+                value={username}
+                onChange={handleUsernameChange}
+                placeholder="Enter your username"
+                className={`h-12 pl-10 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 ${usernameError ? "border-red-500 focus:ring-red-200" : ""}`}
+            />
+          </div>
           {usernameError && (
             <p className="text-xs text-red-500">{usernameError}</p>
           )}
@@ -187,13 +163,13 @@ const LoginForm = () => {
             Password
           </label>
           <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={handlePasswordChange}
-              onBlur={handlePasswordBlur}
               placeholder="Enter your password"
-              className={`h-12 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 pr-12 ${passwordErrors.length > 0 ? "border-red-500 focus:ring-red-200" : ""}`}
+              className="h-12 pl-10 bg-secondary/50 border-border focus:border-primary focus:ring-primary/20 pr-12"
             />
             <button
               type="button"
@@ -203,22 +179,6 @@ const LoginForm = () => {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          
-          {/* Validation Feedback */}
-          {passwordErrors.length > 0 ? (
-            <div className="text-xs text-red-500 font-medium mt-1 space-y-1">
-                <p>Password missing:</p>
-                <ul className="list-disc list-inside pl-1">
-                    {passwordErrors.map((err, index) => (
-                        <li key={index}>{err}</li>
-                    ))}
-                </ul>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground mt-1">
-                Must be at least 6 chars, with 1 number & 1 special char.
-            </p>
-          )}
         </div>
 
         {/* Captcha Section */}
@@ -239,13 +199,13 @@ const LoginForm = () => {
                     />
                 </div>
                 
-                {/* Refresh Button */}
+                {/* Refresh Button - Styled to look better on hover */}
                 <Button 
                     type="button" 
                     variant="outline" 
                     size="icon" 
                     onClick={generateCaptcha}
-                    className="shrink-0 h-12 w-12 hover:bg-secondary"
+                    className="shrink-0 h-12 w-12 border-border hover:bg-transparent hover:border-primary hover:text-primary transition-colors"
                     title="Refresh Captcha"
                 >
                     <RefreshCw size={18} />
@@ -307,8 +267,6 @@ const LoginForm = () => {
         </div>
 
       </form>
-
-      
     </div>
   );
 };

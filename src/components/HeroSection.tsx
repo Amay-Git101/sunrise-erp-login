@@ -7,7 +7,7 @@ const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-start">
           
           {/* Left Column: Heading + Quote */}
-          <div>
+          <div className="flex flex-col h-full justify-between">
             {/* Main Heading */}
             <div className="mb-12">
               <h1 className="font-serif text-7xl lg:text-9xl font-medium tracking-tight text-foreground leading-none">
@@ -18,14 +18,16 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Pull Quote */}
-            <div className="border-l-2 border-primary pl-8 py-4 hidden lg:block">
-              <p className="font-serif text-2xl lg:text-3xl text-foreground italic leading-snug mb-3">
-                "Every action tracked. Every permission justified."
-              </p>
-              <p className="font-sans text-muted-foreground text-base">
-                Accountability isn't optional — it's fundamental.
-              </p>
+            {/* Desktop Quote (Visible on LG screens) */}
+            <div className="hidden lg:block mt-auto">
+              <div className="border-l-2 border-primary pl-6 py-2">
+                <p className="font-serif text-2xl lg:text-3xl text-foreground italic leading-snug mb-3">
+                  "Every action tracked. Every permission justified."
+                </p>
+                <p className="font-sans text-muted-foreground text-sm lg:text-base">
+                  Accountability isn't optional — it's fundamental.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -49,19 +51,18 @@ const HeroSection = () => {
               </p>
             </div>
 
-            {/* Mobile-only Quote (Visible only on small screens for better flow) */}
-            <div className="border-l-2 border-primary pl-8 py-4 lg:hidden mt-8">
+            {/* Mobile Quote (Visible only on small screens) */}
+            <div className="lg:hidden mt-8 border-l-2 border-primary pl-6 py-2">
               <p className="font-serif text-2xl text-foreground italic leading-snug mb-3">
                 "Every action tracked. Every permission justified."
               </p>
-              <p className="font-sans text-muted-foreground text-base">
+              <p className="font-sans text-muted-foreground text-sm">
                 Accountability isn't optional — it's fundamental.
               </p>
             </div>
           </div>
 
         </div>
-
       </div>
     </section>
   );

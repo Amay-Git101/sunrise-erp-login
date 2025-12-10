@@ -29,7 +29,7 @@ const TrustSection = () => {
               Trusted by Industry Leaders
             </h2>
             <p className="font-sans text-muted-foreground text-lg max-w-xl mx-auto">
-              See how enterprises rely on Sunrise Software Development ERP every day
+              See how enterprises rely on Sunrise ERP every day
             </p>
           </div>
 
@@ -59,7 +59,7 @@ const TrustSection = () => {
             {/* Left */}
             <div className="text-center lg:text-left">
               <p className="font-sans text-sm text-surface-dark-foreground/60">
-                © 2025 Sunrise Software Development . All rights reserved.
+                © 2025 Sunrise ERP. All rights reserved.
               </p>
               <p className="font-serif text-xs text-surface-dark-foreground/40 italic mt-1">
                 Building structure. Driving clarity.
@@ -67,27 +67,27 @@ const TrustSection = () => {
             </div>
 
             {/* Divider - Desktop */}
-           <div className="hidden lg:block w-px h-10 bg-surface-dark-foreground/50" />
+            <div className="hidden lg:block w-px h-10 bg-white/20" />
 
             {/* Right */}
             <div className="flex items-center gap-6">
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-surface-dark-foreground transition-colors underline-reveal"
+                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
               >
                 Privacy
               </a>
-              <span className="text-surface-dark-foreground/40">•</span>
+              <span className="text-white/40">•</span>
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-surface-dark-foreground transition-colors underline-reveal"
+                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
               >
                 Terms
               </a>
-              <span className="text-surface-dark-foreground/40">•</span>
+              <span className="text-white/40">•</span>
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-surface-dark-foreground transition-colors underline-reveal"
+                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
               >
                 Help
               </a>

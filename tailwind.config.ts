@@ -102,8 +102,14 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        // IMPROVED: Distinct slide from LEFT to Right
+        "slide-in-left": {
+          from: { opacity: "0", transform: "translateX(-100px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        // IMPROVED: Distinct slide from RIGHT to Left
         "slide-in-right": {
-          from: { opacity: "0", transform: "translateX(10px)" },
+          from: { opacity: "0", transform: "translateX(100px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
       },
@@ -112,7 +118,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-up": "fade-up 0.6s ease-out forwards",
         "fade-in": "fade-in 0.4s ease-out forwards",
-        "slide-in-right": "slide-in-right 0.3s ease-out forwards",
+        // Slower duration (0.8s) for a smoother, noticeable transition
+        "slide-in-left": "slide-in-left 0.8s ease-out forwards",
+        "slide-in-right": "slide-in-right 0.8s ease-out forwards",
       },
     },
   },

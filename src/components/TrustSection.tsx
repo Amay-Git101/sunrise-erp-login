@@ -2,19 +2,19 @@ import ReviewCard from "./ReviewCard";
 
 const reviews = [
   {
-    quote: "Finally, a system that keeps pace with our operations.",
-    fullReview: "After years of fragmented tools and manual processes, Sunrise ERP unified our entire operation. The implementation was seamless, and our teams adapted within weeks. Real-time visibility has transformed how we make decisions.",
-    department: "Operations Director",
+    quote: "Custom Tailoring Operations.",
+    fullReview: "Order tracking, customer measurements, and production status finally live in one place. Our tailoring workflow is no longer scattered across teams",
+    department: "Tailoring Website Industry",
   },
   {
-    quote: "Audit preparation went from weeks to hours.",
-    fullReview: "Compliance used to be our biggest headache. Now, every transaction is logged, every approval is documented, and generating reports for auditors takes minutes instead of days. The peace of mind is invaluable.",
-    department: "Finance Department",
+    quote: "Payroll & HR Department.",
+    fullReview: "Salary processing, attendance, and compliance used to take days. Now payroll closes on time without last-minute chaos.",
+    department: "Payroll Industry",
   },
   {
-    quote: "Cross-departmental coordination is effortless now.",
-    fullReview: "Before Sunrise, getting procurement, manufacturing, and logistics on the same page was a daily battle. Now information flows automatically. Everyone sees the same data, and handoffs happen without friction.",
-    department: "Supply Chain Lead",
+    quote: "Transportation Industry.",
+    fullReview: "Vehicle logs, route planning, and driver accountability became transparent. We finally operate with data instead of assumptions.",
+    department: "Transportation & Fleet Management",
   },
 ];
 
@@ -26,10 +26,10 @@ const TrustSection = () => {
           {/* Header */}
           <div className="text-center mb-16">
             <h2 className="font-serif text-4xl lg:text-5xl font-medium text-foreground mb-4">
-              Trusted by Industry Leaders
+              Trusted Across Core Business Operations
             </h2>
             <p className="font-sans text-muted-foreground text-lg max-w-xl mx-auto">
-              See how enterprises rely on Sunrise ERP every day
+              How Sunrise Software Development supports tailored softwares, payroll, and transportation teams every day
             </p>
           </div>
 

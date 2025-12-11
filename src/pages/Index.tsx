@@ -30,8 +30,8 @@ const Index = () => {
               
               {/* Main Title & Subtitle */}
               <div className="mb-12">
-                <h1 className="font-serif text-5xl lg:text-7xl font-medium tracking-tight text-foreground leading-tight mb-4">
-                  Sunrise Software Development
+                <h1 className="welcome-title text-5xl lg:text-7xl font-medium tracking-tight text-foreground leading-tight mb-4">
+                  Sunrise 
                 </h1>
                 <p className="font-serif text-3xl lg:text-5xl italic text-primary">
                   ERP Solutions
@@ -67,11 +67,9 @@ const Index = () => {
               </h1>
             </div>
 
-            {/* Login Form Container - Slides in from Right */}
-            {/* Added a small delay-200 class (if supported by tailwindcss-animate) or relying on natural timing */}
+            {/* Login Form Container - Slides in from Right (Simultaneously with Left side) */}
             <div 
               className="w-full max-w-md animate-slide-in-right" 
-              style={{ animationDelay: "0.2s" }} // Inline style for delay ensures it works
               ref={loginRef as any}
             >
                <LoginForm />

@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogOut, User, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/config"; 
 
-// Interfaces matching your C# ResponseModels.cs
+// --- REMOVED IMPORT FROM CONFIG ---
+// import { API_BASE_URL } from "@/config"; 
+
 interface UserInfo {
   userName: string;
   fullName: string;
@@ -21,6 +22,9 @@ interface UserRight {
 }
 
 const Dashboard = () => {
+  // --- HARDCODED URL FIX ---
+  const API_BASE_URL = "http://localhost:5162"; 
+
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -43,15 +47,15 @@ const Dashboard = () => {
 
   const handleLogout = async () => {
     try {
-      // 1. Notify Server (FIXED: Added Auth Header)
       const token = localStorage.getItem("authToken");
       
       if (user?.userLoginId && token) {
+        // Uses the hardcoded API_BASE_URL
         await fetch(`${API_BASE_URL}/api/Auth/logout`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` // <--- CRITICAL FIX
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({ userLoginId: user.userLoginId })
         });
@@ -59,7 +63,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Logout notification failed", error);
     } finally {
-      // 2. Clear Local Storage
       localStorage.clear();
       toast({ title: "Logged Out", description: "See you next time!" });
       navigate("/");
@@ -107,7 +110,7 @@ const Dashboard = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {rights.filter(r => r.allowAccess).map((right, index) => (
                             <div key={index} className="flex items-center p-3 bg-secondary/20 rounded-md border border-border/50">
-                                <div className="w-2 h-2 rounded-full bg-green-500 mr-3"></div>
+                                <div className="w-2 h-2 rounded-full bg-green-500 mr-3 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
                                 <div className="flex flex-col">
                                     <span className="font-medium text-sm">{right.pageName}</span>
                                     <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{right.menuName}</span>

@@ -1,45 +1,37 @@
+// src/components/LoginForm.tsx
 import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, RefreshCw, User, Lock, KeyRound, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast"; // Assuming you have shadcn toast, otherwise use alert
-import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "@/config";
-
-// --- CONFIGURATION ---
-// In a real app, put this in .env (VITE_API_URL)
-//const API_BASE_URL = "https://localhost:7260"; 
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom"
+// import { API_BASE_URL } from "@/config"; 
 
 const LoginForm = () => {
+  const API_BASE_URL = "http://localhost:5162";
+
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // UI State
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<"login" | "otp">("login");
 
-  // Login Form Data
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   
-  // Captcha State
   const [captchaInput, setCaptchaInput] = useState("");
-  const [captchaId, setCaptchaId] = useState(""); // Server-provided ID
-  const [captchaText, setCaptchaText] = useState(""); // Server-provided Text
+  const [captchaId, setCaptchaId] = useState("");
+  const [captchaText, setCaptchaText] = useState("");
   
-  // OTP State
   const [otp, setOtp] = useState("");
   const [otpDetails, setOtpDetails] = useState<{ userId: number; userLoginId: string; message: string } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // --- API CALLS ---
-
   const fetchCaptcha = async () => {
     try {
-      // Clear previous
       setCaptchaInput("");
       const ctx = canvasRef.current?.getContext("2d");
       ctx?.clearRect(0, 0, 140, 48);
@@ -51,7 +43,7 @@ const LoginForm = () => {
       if (result.success && result.data) {
         setCaptchaId(result.data.captchaId);
         setCaptchaText(result.data.captchaText);
-        drawCaptcha(result.data.captchaText); // Draw the server text locally
+        drawCaptcha(result.data.captchaText);
       }
     } catch (error) {
       console.error("Captcha error:", error);
@@ -78,14 +70,12 @@ const LoginForm = () => {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        // If captcha invalid, refresh it immediately
         if (result.errorType === "captcha_invalid" || result.message?.toLowerCase().includes("captcha")) {
             fetchCaptcha();
         }
         throw new Error(result.message || "Login failed");
       }
 
-      // Check if OTP is required
       if (result.data?.requiresOTP) {
         setOtpDetails({
           userId: result.data.userId,
@@ -95,7 +85,6 @@ const LoginForm = () => {
         setStep("otp");
         toast({ title: "OTP Required", description: result.message });
       } else {
-        // Direct Success
         handleLoginSuccess(result);
       }
     } catch (error: any) {
@@ -137,24 +126,16 @@ const LoginForm = () => {
   };
 
   const handleLoginSuccess = (result: any) => {
-    // Store Token & Data
     localStorage.setItem("authToken", result.token);
-    localStorage.setItem("userInfo", JSON.stringify(result.data)); 
+    localStorage.setItem("userInfo", JSON.stringify(result.data));
     
     if (result.userRights) {
         localStorage.setItem("userRights", JSON.stringify(result.userRights));
     }
 
     toast({ title: "Success", description: "Logged in successfully!" });
-    
-    // 3. Redirect (Reload or navigate)
-    // window.location.href = "/dashboard"; 
-    // For now, just log to console to show it worked
-    console.log("LOGIN COMPLETE. Token:", result.token);
     navigate("/dashboard");
   };
-
-  // --- UTILS ---
 
   const drawCaptcha = (text: string) => {
     const canvas = canvasRef.current;
@@ -162,10 +143,8 @@ const LoginForm = () => {
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Background
         ctx.fillStyle = "#f3f4f6"; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // Text
         ctx.font = "bold 24px 'Courier New', monospace";
         ctx.fillStyle = "#374151"; 
         ctx.textBaseline = "middle";
@@ -180,7 +159,6 @@ const LoginForm = () => {
             ctx.fillText(text[i], 0, 0);
             ctx.restore();
         }
-        // Noise
         for (let i = 0; i < 5; i++) {
             ctx.strokeStyle = `rgba(100, 100, 100, ${Math.random() * 0.5})`;
             ctx.lineWidth = 1;
@@ -193,12 +171,10 @@ const LoginForm = () => {
     }
   };
 
-  // Initial Load
   useEffect(() => {
     fetchCaptcha();
   }, []);
 
-  // --- HANDLERS ---
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
@@ -217,8 +193,6 @@ const LoginForm = () => {
     if (!otp) return;
     verifyOtp();
   };
-
-  // --- RENDER ---
 
   if (step === "otp") {
     return (
@@ -268,7 +242,6 @@ const LoginForm = () => {
 
       <form onSubmit={handleLoginSubmit} className="space-y-1.5">
         
-        {/* Username */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Username</label>
           <div className="relative">
@@ -283,7 +256,6 @@ const LoginForm = () => {
           </div>
         </div>
 
-        {/* Password */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Password</label>
           <div className="relative">
@@ -305,7 +277,6 @@ const LoginForm = () => {
           </div>
         </div>
 
-        {/* Captcha */}
         <div className="space-y-2 pt-2">
             <label className="text-sm font-medium text-foreground">Security Check</label>
             <div className="flex items-center gap-3">

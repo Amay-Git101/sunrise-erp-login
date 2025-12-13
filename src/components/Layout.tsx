@@ -1,54 +1,24 @@
-import { useState, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { Menu } from "lucide-react";
+import TopBar from "./TopBar";
 
 const Layout = () => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [rights, setRights] = useState([]);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Load data for the sidebar
-    const storedUser = localStorage.getItem("userInfo");
-    const storedRights = localStorage.getItem("userRights");
-
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedRights) setRights(JSON.parse(storedRights));
-    
-    // Redirect if not logged in
-    if (!localStorage.getItem("authToken")) {
-        navigate("/");
-    }
-  }, [navigate]);
-
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar Component */}
-      <Sidebar 
-        user={user} 
-        userRights={rights} 
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-      />
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-900">
+      {/* 1. Sidebar (Left) */}
+      <div className="hidden md:flex flex-col w-64 fixed inset-y-0 z-50">
+        <Sidebar />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:w-full">
-        {/* Mobile Header */}
-        <header className="lg:hidden h-16 bg-white border-b flex items-center px-4 sticky top-0 z-30">
-            <button 
-                onClick={() => setIsMobileOpen(true)}
-                className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-                <Menu size={24} />
-            </button>
-            <span className="ml-3 font-semibold text-gray-900">Sunrise ERP</span>
-        </header>
+      {/* 2. Main Content Wrapper (Right) */}
+      <div className="flex-1 flex flex-col md:pl-64 h-full">
+        
+        {/* Top Header */}
+        <TopBar />
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-auto">
-            <Outlet />
+        {/* Dynamic Page Content */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+          <Outlet />
         </main>
       </div>
     </div>

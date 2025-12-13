@@ -1,177 +1,120 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { 
-  Sun, 
-  ChevronLeft, 
-  ChevronRight, 
-  User, 
-  LogOut, 
+  LayoutDashboard, 
+  Users, 
+  Ruler, 
+  Scissors, 
+  Shirt, 
+  FileText, 
   Settings, 
-  LayoutDashboard,
-  Files,
-  Users,
-  Building2,
-  Mail,
-  Menu as MenuIcon
+  ChevronRight 
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-interface SidebarProps {
-  user: any;
-  userRights: any[];
-  isMobileOpen: boolean;
-  setIsMobileOpen: (open: boolean) => void;
-}
+const Sidebar = () => {
+  const location = useLocation();
+  const pathname = location.pathname;
 
-const Sidebar = ({ user, userRights, isMobileOpen, setIsMobileOpen }: SidebarProps) => {
-  const navigate = useNavigate();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // Helper to check active state
+  const isActive = (path: string) => pathname === path;
 
-  // Helper to map API page names to Icons
-  const getIconForMenu = (menuName: string) => {
-    const name = menuName?.toLowerCase() || "";
-    if (name.includes("dashboard")) return <LayoutDashboard size={20} />;
-    if (name.includes("user")) return <Users size={20} />;
-    if (name.includes("company")) return <Building2 size={20} />;
-    if (name.includes("email")) return <Mail size={20} />;
-    return <Files size={20} />;
-  };
-
-  const handleLogout = () => {
-    // We'll handle the actual logout logic in the parent or a hook
-    navigate("/dashboard"); // Just close menu for now, parent handles logout
-  };
+  // Menu Configuration
+  const menuGroups = [
+    {
+      title: "Main",
+      items: [
+        { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+      ]
+    },
+    {
+      title: "Masters",
+      items: [
+        { name: "User Management", path: "/users", icon: Users },
+        { name: "Measurements", path: "/measurements", icon: Ruler }, // <--- NEW LINK
+        { name: "Tailoring Items", path: "/tailoring-items", icon: Scissors },
+        { name: "Customers", path: "/customers", icon: Shirt },
+      ]
+    },
+    {
+      title: "Entry",
+      items: [
+        { name: "New Booking", path: "/booking/new", icon: FileText },
+        { name: "Order Status", path: "/orders", icon: FileText },
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        { name: "Settings", path: "/settings", icon: Settings },
+      ]
+    }
+  ];
 
   return (
-    <>
-      {/* Mobile Overlay */}
-      {isMobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Container */}
-      <aside 
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out lg:static",
-          isCollapsed ? "w-[70px]" : "w-64",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        )}
-      >
-        {/* Header - Gradient Background like Legacy App */}
-        <div className={cn(
-          "flex items-center px-4 h-16 bg-gradient-to-r from-amber-500 to-orange-500 text-white transition-all duration-300",
-          isCollapsed ? "justify-center" : "justify-between"
-        )}>
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div className="flex items-center justify-center min-w-8 w-8 h-8 bg-white/20 rounded-lg">
-              <Sun className="text-white" size={20} />
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col leading-none">
-                <span className="font-bold text-lg">Sunrise</span>
-                <span className="text-xs text-amber-100 font-medium">ERP Solutions</span>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Collapse Toggle */}
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex p-1.5 hover:bg-white/20 rounded-md transition-colors"
-          >
-            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
+    <div className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col sticky top-0">
+      
+      {/* Logo Area */}
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <div className="h-8 w-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-md flex items-center justify-center mr-3 shadow-sm">
+          <span className="text-white font-bold text-lg">S</span>
         </div>
-
-        {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <nav className="space-y-1 px-2">
-            {/* Dashboard Link (Always Visible) */}
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-3 px-3 py-2.5 text-gray-700 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group"
-            >
-              <LayoutDashboard size={20} className="group-hover:text-amber-600 text-gray-400" />
-              {!isCollapsed && <span className="font-medium text-sm">Dashboard</span>}
-            </Link>
-
-            {/* Dynamic Items from API Rights */}
-            {userRights.filter(r => r.allowAccess).map((right, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 px-3 py-2.5 text-gray-700 rounded-lg hover:bg-amber-50 hover:text-amber-600 transition-colors group cursor-pointer"
-              >
-                <div className="group-hover:text-amber-600 text-gray-400">
-                    {getIconForMenu(right.pageName)}
-                </div>
-                {!isCollapsed && (
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm truncate">{right.pageName}</span>
-                    <span className="text-[10px] text-gray-400 uppercase">{right.menuName}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
+        <div>
+          <h1 className="font-bold text-gray-800 text-lg leading-tight">Sunrise</h1>
+          <p className="text-[10px] text-gray-400 font-medium tracking-wider">ERP SOLUTIONS</p>
         </div>
+      </div>
 
-        {/* User Footer - Gradient Background */}
-        <div className="border-t border-gray-200 p-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className={cn(
-                "flex items-center w-full p-2 rounded-lg hover:bg-gray-100 transition-colors text-left",
-                isCollapsed ? "justify-center" : "gap-3"
-              )}>
-                <div className="flex items-center justify-center min-w-8 w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-sm">
-                  <User size={16} />
-                </div>
-                
-                {!isCollapsed && (
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {user?.fullName || "User Account"}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {user?.companyName || "Sunrise ERP"}
-                    </p>
-                  </div>
-                )}
-              </button>
-            </DropdownMenuTrigger>
+      {/* Menu Items */}
+      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
+        {menuGroups.map((group, groupIdx) => (
+          <div key={groupIdx}>
             
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => window.location.href = "/"}>
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            {/* Group Title */}
+            <h3 className="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              {group.title}
+            </h3>
+
+            {/* Links */}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = isActive(item.path);
+                const Icon = item.icon;
+                
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`
+                      flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 group
+                      ${active 
+                        ? "bg-amber-50 text-amber-700 shadow-sm" 
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      }
+                    `}
+                  >
+                    <div className="flex items-center">
+                      <Icon 
+                        className={`mr-3 h-4 w-4 transition-colors ${active ? "text-amber-600" : "text-gray-400 group-hover:text-gray-600"}`} 
+                      />
+                      {item.name}
+                    </div>
+                    
+                    {active && <ChevronRight className="h-4 w-4 text-amber-500 opacity-50" />}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer / Version */}
+      <div className="p-4 border-t border-gray-100">
+        <div className="bg-gray-50 rounded-lg p-3 text-center">
+             <p className="text-xs text-gray-400 font-medium">v1.0.2 Beta</p>
         </div>
-      </aside>
-    </>
+      </div>
+      
+    </div>
   );
 };
 

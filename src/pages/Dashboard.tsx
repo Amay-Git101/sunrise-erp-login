@@ -1,367 +1,237 @@
 import { useState } from "react";
 import { 
-  Calendar as CalendarIcon, 
-  Package, 
-  ShoppingBag, 
-  Clock, 
-  CreditCard, 
-  Download,
-  Filter,
-  Calculator,
-  Box,
-  TrendingUp
+  Users, Scissors, Ruler, TrendingUp, ShoppingBag, 
+  Filter, Download, CreditCard, Clock, CheckCircle2,
+  MoreHorizontal, Calendar
 } from "lucide-react";
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
+} from "recharts";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 
+// --- MOCK DATA ---
+const revenueData = [
+  { name: "Mon", total: 1500, orders: 4 }, 
+  { name: "Tue", total: 2300, orders: 7 },
+  { name: "Wed", total: 3400, orders: 12 }, 
+  { name: "Thu", total: 2900, orders: 9 },
+  { name: "Fri", total: 4500, orders: 15 }, 
+  { name: "Sat", total: 5100, orders: 18 },
+  { name: "Sun", total: 1200, orders: 3 },
+];
+
+const bookings = [
+  { id: "SM/25-0080", customer: "Priy Ranjan", item: "Shirt (Stitching)", mobile: "8840646436", qty: 1, rate: 400, total: 400, status: "Paid" },
+  { id: "SM/25-0079", customer: "Ram Bhavan", item: "Pant (Stitching)", mobile: "8423045332", qty: 1, rate: 550, total: 550, status: "Pending" },
+  { id: "CM/25-00877", customer: "S.K Singhniya", item: "Blazer (Stitching)", mobile: "8052666634", qty: 1, rate: 0, total: 0, status: "Paid" },
+  { id: "SM/25-0081", customer: "Rahul Kumar", item: "Kurta (Stitching)", mobile: "9988776655", qty: 2, rate: 600, total: 1200, status: "Pending" },
+  { id: "SM/25-0082", customer: "Amit Verma", item: "Suit (Stitching)", mobile: "9988001122", qty: 1, rate: 4500, total: 4500, status: "Paid" },
+];
+
 const Dashboard = () => {
-  // --- STATE MANAGEMENT ---
-  // We keep simple state for the demo. In a real app, these would trigger API calls.
-  
-  // 1. Booking Tab State
-  const [bookingPeriod, setBookingPeriod] = useState("7days");
-  const [bookingFrom, setBookingFrom] = useState("2025-01-01");
-  const [bookingTo, setBookingTo] = useState("2025-01-07");
+  const [activeTab, setActiveTab] = useState<"general" | "bookings" | "upcoming" | "pending">("general");
 
-  // 2. Upcoming Tab State
-  const [upcomingPeriod, setUpcomingPeriod] = useState("next7");
-  const [upcomingType, setUpcomingType] = useState("delivery");
-
-  // 3. Pending Tab State
-  const [isPendingDateFiltered, setIsPendingDateFiltered] = useState(false);
-
-  // 4. General Tab State (Payment)
-  const [paymentTotal, setPaymentTotal] = useState<number | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-
-  // --- HANDLERS ---
-  const handleCalculatePayment = () => {
-    setIsCalculating(true);
-    // Simulate API call
-    setTimeout(() => {
-        setPaymentTotal(125000.50);
-        setIsCalculating(false);
-    }, 800);
-  };
-
-  return (
-    <div className="p-6 space-y-6">
+  // --- 1. GENERAL TAB ---
+  const GeneralView = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       
-      {/* --- PAGE HEADER --- */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Real-time business insights and performance metrics.</p>
-        </div>
-        
-        {/* Right side usually handled by Tabs, but if you want global actions they go here */}
-      </div>
-
-      {/* --- TABS SYSTEM --- */}
-      <Tabs defaultValue="bookings" className="w-full">
-        
-        {/* Tab Navigation */}
-        <div className="flex justify-start md:justify-end mb-6">
-            <TabsList className="grid grid-cols-4 w-full md:w-[500px] h-11 bg-white border border-gray-200 shadow-sm p-1">
-                <TabsTrigger value="bookings" className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700">Bookings</TabsTrigger>
-                <TabsTrigger value="upcoming" className="data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">Upcoming</TabsTrigger>
-                <TabsTrigger value="pending" className="data-[state=active]:bg-orange-100 data-[state=active]:text-orange-700">Pending</TabsTrigger>
-                <TabsTrigger value="general" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">General</TabsTrigger>
-            </TabsList>
-        </div>
-
-        {/* ============================== */}
-        {/* 1. BOOKINGS CONTENT            */}
-        {/* ============================== */}
-        <TabsContent value="bookings" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* 3A. Booking Filters */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                        <Filter className="w-4 h-4" /> Booking Filters
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Period</label>
-                        <Select value={bookingPeriod} onValueChange={setBookingPeriod}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="today">Today</SelectItem>
-                                <SelectItem value="3days">Last 3 Days</SelectItem>
-                                <SelectItem value="7days">Last 7 Days</SelectItem>
-                                <SelectItem value="15days">Last 15 Days</SelectItem>
-                                <SelectItem value="30days">Last 30 Days</SelectItem>
-                            </SelectContent>
-                        </Select>
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+            { title: "Total Revenue", value: "₹45,231", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-100", trend: "+12.5%" },
+            { title: "Active Orders", value: "124", icon: ShoppingBag, color: "text-blue-600", bg: "bg-blue-100", trend: "+4.3%" },
+            { title: "Pending Delivery", value: "12", icon: Clock, color: "text-amber-600", bg: "bg-amber-100", trend: "-2.1%" },
+            { title: "New Customers", value: "84", icon: Users, color: "text-purple-600", bg: "bg-purple-100", trend: "+8.4%" },
+        ].map((stat, i) => (
+            <div key={i} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">{stat.title}</p>
+                        <h3 className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-gray-500 uppercase">From Date</label>
-                            <Input type="date" value={bookingFrom} onChange={e => setBookingFrom(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-gray-500 uppercase">To Date</label>
-                            <Input type="date" value={bookingTo} onChange={e => setBookingTo(e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Rate Filter</label>
-                        <Select defaultValue="all">
-                            <SelectTrigger><SelectValue placeholder="All Rates" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Rates</SelectItem>
-                                <SelectItem value="positive">Rate &gt; 0</SelectItem>
-                                <SelectItem value="zero">Rate = 0</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* 3B. Items Summary Panel */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                        <Package className="w-4 h-4" /> Items Summary
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 min-h-[200px] flex flex-col justify-center items-center text-center">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4 text-gray-400">
-                        <Box className="w-8 h-8" />
-                    </div>
-                    <p className="text-gray-500 font-medium">No items found</p>
-                    <p className="text-xs text-muted-foreground mt-1">Try adjusting the filter period</p>
-                </CardContent>
-            </Card>
-
-            {/* 3C. Booking Orders Panel (Large) */}
-            <Card className="lg:col-span-3 shadow-md border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <ShoppingBag className="w-5 h-5 text-amber-600" />
-                        <h3 className="font-bold text-gray-800">Booking Orders</h3>
-                    </div>
-                    
-                    {/* Stats in Header */}
-                    <div className="flex items-center gap-4 text-sm">
-                        <div className="px-3 py-1 bg-white rounded-md border border-gray-200 shadow-sm">
-                            <span className="text-gray-500 mr-2">Orders:</span>
-                            <span className="font-bold text-gray-900">0</span>
-                        </div>
-                        <div className="px-3 py-1 bg-white rounded-md border border-gray-200 shadow-sm">
-                            <span className="text-gray-500 mr-2">Items:</span>
-                            <span className="font-bold text-gray-900">0</span>
-                        </div>
-                        <div className="px-3 py-1 bg-white rounded-md border border-gray-200 shadow-sm">
-                            <span className="text-gray-500 mr-2">Amount:</span>
-                            <span className="font-bold text-green-600">₹0</span>
-                        </div>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                            <Download className="w-4 h-4 mr-2" /> Export
-                        </Button>
+                    <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
+                        <stat.icon className="w-5 h-5" />
                     </div>
                 </div>
-                
-                <CardContent className="py-16 flex flex-col justify-center items-center text-center bg-white">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 shadow-inner">
-                        <ShoppingBag className="w-10 h-10 text-gray-300" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">No booking orders found</h3>
-                    <p className="text-gray-500 mt-1 max-w-sm">
-                        There are no orders recorded for the selected date range. Try selecting a different period or check your connection.
-                    </p>
-                </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* ============================== */}
-        {/* 2. UPCOMING CONTENT            */}
-        {/* ============================== */}
-        <TabsContent value="upcoming" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-             {/* 4A. Upcoming Filters */}
-             <Card className="lg:col-span-1 shadow-sm border-gray-200">
-                <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-blue-600 flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> Schedule Filters
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Period</label>
-                        <Select value={upcomingPeriod} onValueChange={setUpcomingPeriod}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="today">Today</SelectItem>
-                                <SelectItem value="next3">Next 3 Days</SelectItem>
-                                <SelectItem value="next7">Next 7 Days</SelectItem>
-                                <SelectItem value="next15">Next 15 Days</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Type</label>
-                        <Select value={upcomingType} onValueChange={setUpcomingType}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="delivery">Delivery</SelectItem>
-                                <SelectItem value="trial">Trial</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {/* Auto-calculated dates usually shown as readonly or info */}
-                    <div className="pt-2">
-                        <div className="text-xs text-gray-400">Date Range:</div>
-                        <div className="text-sm font-medium text-gray-700">01 Jan - 07 Jan</div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-3 shadow-md border-gray-200">
-                <CardContent className="py-16 flex flex-col justify-center items-center text-center">
-                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-                        <TrendingUp className="w-8 h-8 text-blue-300" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">No upcoming schedules</h3>
-                    <p className="text-gray-500 mt-1">Everything looks clear for the selected period.</p>
-                </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* ============================== */}
-        {/* 3. PENDING CONTENT             */}
-        {/* ============================== */}
-        <TabsContent value="pending" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 5A. Pending Filters */}
-            <Card className="shadow-sm border-gray-200 h-fit">
-                <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-orange-600 flex items-center gap-2">
-                        <Clock className="w-4 h-4" /> Pending Filters
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                    <div className="flex items-center space-x-2 border p-3 rounded-md bg-gray-50">
-                        <Checkbox 
-                            id="filterDate" 
-                            checked={isPendingDateFiltered}
-                            onCheckedChange={(c) => setIsPendingDateFiltered(!!c)}
-                        />
-                        <label
-                            htmlFor="filterDate"
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                            Enable Date Filtering
-                        </label>
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <label className={`text-xs font-medium uppercase ${!isPendingDateFiltered ? "text-gray-300" : "text-gray-500"}`}>
-                            Filter Date
-                        </label>
-                        <Input type="date" disabled={!isPendingDateFiltered} />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="md:col-span-2 shadow-md border-gray-200">
-                <CardContent className="py-16 flex flex-col justify-center items-center text-center">
-                    <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-4">
-                        <Clock className="w-8 h-8 text-orange-300" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">No pending items</h3>
-                    <p className="text-gray-500 mt-1">Great job! You have no pending tasks.</p>
-                </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* ============================== */}
-        {/* 4. GENERAL CONTENT (PAYMENTS)  */}
-        {/* ============================== */}
-        <TabsContent value="general" className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* 6A. Date Range Filter */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="pb-3 border-b border-gray-100 bg-gray-50/50">
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-green-600 flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4" /> Payment Calculator
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-gray-500 uppercase">From Date</label>
-                            <Input type="date" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-gray-500 uppercase">To Date</label>
-                            <Input type="date" />
-                        </div>
-                    </div>
-                    <Button 
-                        onClick={handleCalculatePayment}
-                        disabled={isCalculating}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md"
-                    >
-                        {isCalculating ? "Calculating..." : "Calculate Total Payment"}
-                    </Button>
-                </CardContent>
-            </Card>
-
-            {/* 6B. Total Payment Display */}
-            <div className="space-y-6">
-                <Card className="shadow-md border-green-100 bg-gradient-to-br from-green-50 to-white">
-                    <CardContent className="pt-6 pb-6">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-green-100 rounded-lg text-green-600">
-                                <CreditCard className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Payment</p>
-                                <h2 className="text-3xl font-bold text-gray-900">
-                                    {paymentTotal !== null ? `₹${paymentTotal.toLocaleString()}` : "—"}
-                                </h2>
-                            </div>
-                        </div>
-                        {paymentTotal !== null && (
-                            <div className="mt-4 pt-4 border-t border-green-100 flex justify-between items-center text-sm">
-                                <span className="text-gray-500">Total Invoices Processed</span>
-                                <Badge variant="outline" className="bg-white text-green-700 border-green-200">
-                                    42 Invoices
-                                </Badge>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* 6C. Info Box */}
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex gap-3 text-blue-700">
-                    <div className="mt-0.5">
-                        <Calculator className="w-5 h-5" />
-                    </div>
-                    <div className="text-sm leading-relaxed">
-                        <p className="font-semibold mb-1">How this works</p>
-                        Select a date range and click <strong>Calculate</strong> to view the total payment amount collected from all invoices generated within that period.
-                    </div>
+                <div className="mt-4 flex items-center text-xs font-medium">
+                    <span className={stat.trend.startsWith('+') ? "text-emerald-600" : "text-rose-600"}>
+                        {stat.trend}
+                    </span>
+                    <span className="text-gray-400 ml-1">from last month</span>
                 </div>
             </div>
+        ))}
+      </div>
 
-          </div>
-        </TabsContent>
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h3 className="font-bold text-gray-900 text-lg">Revenue Overview</h3>
+                </div>
+                <Badge variant="secondary" className="w-fit">Weekly View</Badge>
+            </div>
+            <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={revenueData}>
+                        <defs>
+                            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
+                                <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                        <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v)=>`₹${v}`} />
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                        <Area type="monotone" dataKey="total" stroke="#f97316" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
 
-      </Tabs>
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+            <h3 className="font-bold text-gray-900 text-lg mb-2">Order Volume</h3>
+            <div className="flex-1 min-h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={revenueData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                        <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                        <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ borderRadius: '8px' }} />
+                        <Bar dataKey="orders" fill="#3b82f6" radius={[4,4,4,4]} barSize={20} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // --- 2. BOOKINGS / LIST VIEW (The Specific Fix) ---
+  const BookingsView = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
+      
+      {/* FILTER BAR: Compact on mobile */}
+      <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-4 justify-between lg:items-center">
+         
+         {/* Inputs stack full width on mobile */}
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full lg:w-auto">
+            <div className="relative w-full">
+                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                <Input type="date" className="pl-9 w-full" />
+            </div>
+            <div className="relative w-full">
+                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                <Input type="date" className="pl-9 w-full" />
+            </div>
+            <Button variant="outline" className="text-gray-600 border-dashed border-gray-300 w-full">
+                <Filter className="w-4 h-4 mr-2"/> Filters
+            </Button>
+         </div>
+
+         {/* Summary Box */}
+         <div className="flex flex-row justify-between items-center bg-gray-50 px-4 py-3 rounded-lg border border-gray-100 w-full lg:w-auto gap-4">
+            <div>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Booking</p>
+                <p className="text-lg font-bold text-gray-900 leading-none">₹5,150</p>
+            </div>
+            <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800">
+                <Download className="w-4 h-4"/>
+            </Button>
+         </div>
+      </div>
+
+      {/* TABLE CONTAINER: This is the fix. overflow-hidden on parent, overflow-x-auto on child */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        
+        {/* THIS DIV enables the inner scrolling without moving the whole page */}
+        <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm text-left whitespace-nowrap min-w-[600px]">
+                <thead className="bg-gray-50/80 text-gray-500 font-semibold border-b border-gray-100">
+                    <tr>
+                        <th className="px-6 py-4">Invoice</th>
+                        <th className="px-6 py-4">Customer</th>
+                        <th className="px-6 py-4">Item</th>
+                        <th className="px-6 py-4 text-center">Qty</th>
+                        <th className="px-6 py-4 text-right">Amount</th>
+                        <th className="px-6 py-4 text-center">Status</th>
+                        <th className="px-6 py-4"></th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                    {bookings.map((row, i) => (
+                        <tr key={i} className="hover:bg-blue-50/30 transition-colors group">
+                            <td className="px-6 py-4 font-mono text-xs font-medium text-slate-500">{row.id}</td>
+                            <td className="px-6 py-4">
+                                <p className="font-medium text-gray-900">{row.customer}</p>
+                                <p className="text-xs text-gray-400">{row.mobile}</p>
+                            </td>
+                            <td className="px-6 py-4 text-gray-600">{row.item}</td>
+                            <td className="px-6 py-4 text-center font-medium bg-gray-50/50">{row.qty}</td>
+                            <td className="px-6 py-4 text-right font-bold text-gray-900">₹{row.total}</td>
+                            <td className="px-6 py-4 text-center">
+                                <Badge variant="outline" className={row.status === "Paid" ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
+                                    {row.status}
+                                </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                <Button variant="ghost" size="icon" className="text-gray-400 hover:text-gray-900">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    // FIX 1: max-w-[100vw] and overflow-x-hidden prevents the body from scrolling sideways
+    <div className="p-4 md:p-8 space-y-8 min-h-screen bg-gray-50/30 w-full max-w-[100vw] overflow-x-hidden">
+      
+      {/* HEADER */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+           <p className="text-gray-500 mt-1 text-sm md:text-base">Overview of your tailoring business</p>
+        </div>
+        
+        {/* TABS - Scrollable container for tabs only */}
+        <div className="overflow-x-auto pb-1 -mx-4 px-4 xl:mx-0 xl:px-0">
+            <div className="bg-white p-1 rounded-xl md:rounded-full border shadow-sm inline-flex whitespace-nowrap">
+                {['general', 'bookings', 'upcoming', 'pending'].map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab as any)}
+                        className={`
+                            px-4 md:px-5 py-2 rounded-lg md:rounded-full text-sm font-medium transition-all duration-300
+                            ${activeTab === tab 
+                                ? 'bg-slate-900 text-white shadow-md' 
+                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                            }
+                        `}
+                    >
+                        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                ))}
+            </div>
+        </div>
+      </div>
+
+      {/* CONTENT */}
+      <div className="min-h-[500px]">
+         {activeTab === 'general' && <GeneralView />}
+         {activeTab === 'bookings' && <BookingsView />}
+         {activeTab === 'upcoming' && <BookingsView />} 
+         {activeTab === 'pending' && <BookingsView />} 
+      </div>
+
     </div>
   );
 };

@@ -28,7 +28,6 @@ const Sidebar = () => {
     {
       title: "Masters",
       items: [
-        { name: "User Management", path: "/users", icon: Users },
         { name: "Measurements", path: "/measurements", icon: Ruler }, // <--- NEW LINK
         { name: "Tailoring Items", path: "/tailoring-items", icon: Scissors },
         { name: "Customers", path: "/customers", icon: Shirt },

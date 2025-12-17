@@ -1,7 +1,15 @@
-import { useState, useEffect } from "react";
-import { Bell, Search, AlertCircle, LogOut } from "lucide-react"; 
-import { useUsers, Company } from "@/hooks/useUsers";
-import { useNavigate } from "react-router-dom"; // <--- 1. Import Navigate
+import { useState } from "react";
+import { 
+  Bell, 
+  Search, 
+  Menu, 
+  User, 
+  LogOut, 
+  Settings, 
+  ChevronDown,
+  Building2,
+  Calendar
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,129 +19,105 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 
-const TopBar = () => {
-  const navigate = useNavigate(); // <--- 2. Initialize Hook
-  const { fetchCompanies } = useUsers();
+interface TopBarProps {
+  toggleSidebar: () => void;
+  isSidebarOpen: boolean;
+}
+
+const TopBar = ({ toggleSidebar }: TopBarProps) => {
+  const navigate = useNavigate();
   
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<number | string>("");
-  const [isLoading, setIsLoading] = useState(true);
+  // Static Data to prevent crashing
+  const companies = [
+    { cId: 1, name: "Sunrise ERP (Demo)" },
+    { cId: 2, name: "Tailor Shop A" }
+  ];
+  const years = ["2025 - 2026", "2024 - 2025"];
 
-  // --- LOGOUT LOGIC ---
+  const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+  const [selectedYear, setSelectedYear] = useState(years[0]);
+
   const handleLogout = () => {
-    // 1. Clear the token
     localStorage.removeItem("authToken");
-    // 2. Redirect to Login Page
+    localStorage.removeItem("userInfo");
     navigate("/login");
   };
 
-  useEffect(() => {
-    const load = async () => {
-        setIsLoading(true);
-        try {
-            const data = await fetchCompanies();
-            if (Array.isArray(data) && data.length > 0) {
-                setCompanies(data);
-                setSelectedCompanyId(data[0].cId);
-            } else {
-                setCompanies([]);
-            }
-        } catch (e) {
-            console.error("Failed to load companies", e);
-            setCompanies([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    load();
-  }, []);
-
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm">
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 fixed top-0 right-0 left-0 z-30 lg:left-64 transition-all duration-300">
       
-      {/* Left: Global Search */}
-      <div className="flex items-center w-full max-w-md text-gray-400">
-        <Search className="w-4 h-4 mr-2" />
-        <input 
-          type="text" 
-          placeholder="Global Search..." 
-          className="bg-transparent border-none focus:outline-none text-sm w-full text-gray-700 placeholder-gray-400"
-        />
+      {/* LEFT */}
+      <div className="flex items-center gap-4 flex-1">
+        <button onClick={toggleSidebar} className="lg:hidden p-2 hover:bg-gray-100 rounded-md">
+          <Menu className="w-5 h-5 text-gray-600" />
+        </button>
+        
+        <div className="relative hidden md:block w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input 
+            placeholder="Global Search..." 
+            className="pl-10 bg-gray-50 border-gray-200 focus:bg-white transition-all h-9"
+          />
+        </div>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-4">
+      {/* RIGHT */}
+      <div className="flex items-center gap-2 md:gap-4">
         
-        {/* Financial Year */}
-        <div className="hidden md:flex items-center bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100">
-          <span className="text-[10px] text-gray-500 mr-2 uppercase font-bold tracking-wider">Year</span>
-          <select className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer">
-            <option>2025 - 2026</option>
-            <option>2024 - 2025</option>
-          </select>
+        {/* Year Dropdown */}
+        <div className="hidden sm:block">
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-2 border-gray-200 bg-gray-50 text-gray-700">
+                        <Calendar className="w-3.5 h-3.5 text-gray-500"/>
+                        <span className="text-xs font-semibold">{selectedYear}</span>
+                        <ChevronDown className="w-3 h-3 opacity-50" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {years.map(year => (
+                        <DropdownMenuItem key={year} onClick={() => setSelectedYear(year)}>
+                            {year}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
 
-        {/* Company Selector */}
-        <div className={`hidden md:flex items-center px-3 py-1.5 rounded-md border min-w-[180px] transition-colors ${companies.length === 0 ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"}`}>
-          <span className={`text-[10px] mr-2 uppercase font-bold tracking-wider ${companies.length === 0 ? "text-red-500" : "text-amber-600"}`}>
-            Company
-          </span>
-          
-          {isLoading ? (
-             <span className="text-sm font-medium text-amber-800 animate-pulse">Loading...</span>
-          ) : companies.length > 0 ? (
-            <select 
-                value={selectedCompanyId} 
-                onChange={(e) => setSelectedCompanyId(e.target.value)}
-                className="bg-transparent text-sm font-bold text-amber-900 focus:outline-none cursor-pointer w-full max-w-[200px]"
-            >
-                {companies.map(c => (
-                    <option key={c.cId} value={c.cId}>{c.companyName}</option>
+        {/* Company Dropdown */}
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 gap-2 border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100">
+                    <Building2 className="w-3.5 h-3.5"/>
+                    <span className="text-xs font-bold truncate max-w-[100px] md:max-w-none">
+                        {selectedCompany.name}
+                    </span>
+                    <ChevronDown className="w-3 h-3 opacity-50" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {companies.map(comp => (
+                    <DropdownMenuItem key={comp.cId} onClick={() => setSelectedCompany(comp)}>
+                        {comp.name}
+                    </DropdownMenuItem>
                 ))}
-            </select>
-          ) : (
-            <div className="flex items-center text-red-600 text-sm font-bold cursor-not-allowed">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                <span>No Access</span>
-            </div>
-          )}
-        </div>
-
-        <div className="h-6 w-px bg-gray-200 mx-1"></div>
-
-        {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative text-gray-500 hover:text-amber-600">
-          <Bell className="w-5 h-5" />
-        </Button>
+            </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* User Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-              <Avatar className="h-9 w-9 border-2 border-amber-100">
-                <AvatarImage src="" alt="@user" />
-                <AvatarFallback className="bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-medium">
-                  AD
-                </AvatarFallback>
-              </Avatar>
+            <Button variant="ghost" size="icon" className="rounded-full bg-slate-900 text-white w-8 h-8 md:w-9 md:h-9">
+              <span className="font-bold text-xs md:text-sm">AD</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            
-            {/* LOGOUT BUTTON */}
-            <DropdownMenuItem 
-                onClick={handleLogout} 
-                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-            >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+              <LogOut className="mr-2 h-4 w-4" /> Log out
             </DropdownMenuItem>
-            
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

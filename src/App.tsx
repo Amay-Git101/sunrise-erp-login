@@ -1,27 +1,20 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
-import LoginForm from "./components/LoginForm";
+import Index from "./pages/Index"; // <--- Import the Split Landing Page
 import Dashboard from "./pages/Dashboard";
-import UserList from "./pages/Users/UserList";
-import MeasurementList from "./pages/Masters/MeasurementList"; // <--- Imported the new page
+import MeasurementList from "./pages/Masters/MeasurementList";
+import TailoringItemList from "./pages/Masters/TailoringItemList"; 
 
 const App = () => {
   return (
     <Routes>
-      {/* Public Route: Login */}
-      <Route path="/login" element={<LoginForm />} />
+      <Route path="/login" element={<Index />} /> {/* <--- Route to Index */}
       
-      {/* Protected Routes (Wrapped in Layout with Sidebar & TopBar) */}
       <Route element={<Layout />}>
-        {/* Default Redirect: Go to Dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* Main Pages */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/users" element={<UserList />} />
-        
-        {/* Master Pages */}
         <Route path="/measurements" element={<MeasurementList />} />
+        <Route path="/tailoring-items" element={<TailoringItemList />} />
       </Route>
     </Routes>
   );

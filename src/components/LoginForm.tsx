@@ -1,16 +1,14 @@
-// src/components/LoginForm.tsx
 import { useState, useEffect, useRef } from "react";
 import { Eye, EyeOff, RefreshCw, User, Lock, KeyRound, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom"
-// import { API_BASE_URL } from "@/config"; 
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
-  const API_BASE_URL = "http://localhost:5162";
-
+  // --- CONFIGURATION ---
+  const API_BASE_URL = "http://localhost:5162"; 
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -18,106 +16,117 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState<"login" | "otp">("login");
 
+  // Form Fields
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  
   const [captchaInput, setCaptchaInput] = useState("");
   const [captchaId, setCaptchaId] = useState("");
-  const [captchaText, setCaptchaText] = useState("");
-  
   const [otp, setOtp] = useState("");
   const [otpDetails, setOtpDetails] = useState<{ userId: number; userLoginId: string; message: string } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // --- CAPTCHA LOGIC ---
   const fetchCaptcha = async () => {
     try {
       setCaptchaInput("");
       const ctx = canvasRef.current?.getContext("2d");
       ctx?.clearRect(0, 0, 140, 48);
-
+      
       const response = await fetch(`${API_BASE_URL}/api/Auth/generate-captcha`);
       if (!response.ok) throw new Error("Failed to load captcha");
       
       const result = await response.json();
       if (result.success && result.data) {
         setCaptchaId(result.data.captchaId);
-        setCaptchaText(result.data.captchaText);
         drawCaptcha(result.data.captchaText);
       }
     } catch (error) {
-      console.error("Captcha error:", error);
-      toast({ title: "Error", description: "Could not load security check.", variant: "destructive" });
+      console.error(error);
     }
   };
 
+  const drawCaptcha = (text: string) => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#f3f4f6"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = "bold 24px monospace"; ctx.fillStyle = "#374151"; 
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        
+        for(let i=0; i<5; i++) {
+            ctx.strokeStyle = '#d1d5db';
+            ctx.beginPath();
+            ctx.moveTo(Math.random()*140, Math.random()*48);
+            ctx.lineTo(Math.random()*140, Math.random()*48);
+            ctx.stroke();
+        }
+      }
+    }
+  };
+
+  useEffect(() => { fetchCaptcha(); }, []);
+
+  // --- LOGIN LOGIC ---
   const loginUser = async () => {
     setIsLoading(true);
     try {
-      const payload = {
-        userName: username,
-        password: password,
-        captchaId: captchaId,
-        captchaCode: captchaInput
-      };
-
       const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ 
+            userName: username, 
+            password: password, 
+            captchaId: captchaId, 
+            captchaCode: captchaInput // This will be uppercase now
+        })
       });
-
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        if (result.errorType === "captcha_invalid" || result.message?.toLowerCase().includes("captcha")) {
+        if (result.message?.toLowerCase().includes("captcha") || result.errorType === "captcha_invalid") {
             fetchCaptcha();
+            toast({ title: "Security Check Failed", description: "Please try the captcha again.", variant: "destructive" });
+        } else {
+            toast({ title: "Login Failed", description: result.message || "Invalid credentials", variant: "destructive" });
         }
-        throw new Error(result.message || "Login failed");
+        throw new Error(result.message);
       }
 
       if (result.data?.requiresOTP) {
         setOtpDetails({
           userId: result.data.userId,
           userLoginId: result.data.userLoginId,
-          message: result.message || "Enter the OTP sent to your email/mobile"
+          message: result.message || "Enter OTP sent to your mobile"
         });
         setStep("otp");
-        toast({ title: "OTP Required", description: result.message });
+        toast({ title: "OTP Sent", description: "Please check your mobile/email." });
       } else {
         handleLoginSuccess(result);
       }
-    } catch (error: any) {
-      toast({ title: "Login Failed", description: error.message, variant: "destructive" });
+    } catch (error) {
+       // handled above
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- OTP LOGIC ---
   const verifyOtp = async () => {
     if (!otpDetails) return;
     setIsLoading(true);
     try {
-      const payload = {
-        userId: otpDetails.userId,
-        otp: parseInt(otp),
-        userLoginId: otpDetails.userLoginId
-      };
-
       const response = await fetch(`${API_BASE_URL}/api/Auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ userId: otpDetails.userId, otp: parseInt(otp), userLoginId: otpDetails.userLoginId })
       });
-
       const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Invalid OTP");
-      }
-
+      if (!response.ok || !result.success) throw new Error(result.message || "Invalid OTP");
       handleLoginSuccess(result);
-
     } catch (error: any) {
       toast({ title: "Verification Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -128,215 +137,122 @@ const LoginForm = () => {
   const handleLoginSuccess = (result: any) => {
     localStorage.setItem("authToken", result.token);
     localStorage.setItem("userInfo", JSON.stringify(result.data));
-    
-    if (result.userRights) {
-        localStorage.setItem("userRights", JSON.stringify(result.userRights));
-    }
-
-    toast({ title: "Success", description: "Logged in successfully!" });
+    toast({ title: "Welcome back!", description: "Redirecting to dashboard..." });
     navigate("/dashboard");
   };
 
-  const drawCaptcha = (text: string) => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#f3f4f6"; 
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = "bold 24px 'Courier New', monospace";
-        ctx.fillStyle = "#374151"; 
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
+  // --- UI ---
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-8 w-full">
         
-        const xGap = canvas.width / (text.length + 1);
-        for (let i = 0; i < text.length; i++) {
-            ctx.save();
-            const angle = (Math.random() - 0.5) * 0.4;
-            ctx.translate(xGap * (i + 1), canvas.height / 2);
-            ctx.rotate(angle);
-            ctx.fillText(text[i], 0, 0);
-            ctx.restore();
-        }
-        for (let i = 0; i < 5; i++) {
-            ctx.strokeStyle = `rgba(100, 100, 100, ${Math.random() * 0.5})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
-            ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
-            ctx.stroke();
-        }
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchCaptcha();
-  }, []);
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username || !password) {
-        toast({ title: "Validation Error", description: "Username and password are required.", variant: "destructive" });
-        return;
-    }
-    if (!captchaInput) {
-        toast({ title: "Validation Error", description: "Please enter the security code.", variant: "destructive" });
-        return;
-    }
-    loginUser();
-  };
-
-  const handleOtpSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp) return;
-    verifyOtp();
-  };
-
-  if (step === "otp") {
-    return (
-        <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-card p-8 lg:p-10 font-sans animate-in fade-in slide-in-from-right-4">
-            <div className="text-center mb-6">
-                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                    <KeyRound className="w-6 h-6 text-primary" />
+        {step === "otp" ? (
+            <div className="animate-in fade-in slide-in-from-right-4">
+                <div className="text-center mb-6">
+                    <div className="mx-auto w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                        <KeyRound className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">Verification Required</h2>
+                    <p className="text-gray-500 text-sm mt-1">{otpDetails?.message}</p>
                 </div>
-                <h2 className="font-serif text-2xl font-medium text-foreground mb-2">Verification Required</h2>
-                <p className="text-muted-foreground text-sm">{otpDetails?.message}</p>
-            </div>
-            
-            <form onSubmit={handleOtpSubmit} className="space-y-4">
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">One-Time Password</label>
+                <form onSubmit={(e) => { e.preventDefault(); if(otp) verifyOtp(); }} className="space-y-4">
                     <Input 
                         type="number" 
-                        placeholder="Enter 4-digit OTP" 
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        className="h-12 text-center text-lg tracking-widest"
-                        autoFocus
+                        placeholder="Enter OTP" 
+                        value={otp} 
+                        onChange={e => setOtp(e.target.value)} 
+                        className="text-center text-lg tracking-widest h-12 bg-gray-50" 
+                        autoFocus 
                     />
-                </div>
-                <Button type="submit" disabled={isLoading} className="w-full h-12 mt-2">
-                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Verify & Login"}
-                </Button>
-                <Button 
-                    type="button" 
-                    variant="ghost" 
-                    className="w-full" 
-                    onClick={() => setStep("login")}
-                >
-                    Back to Login
-                </Button>
-            </form>
-        </div>
-    );
-  }
-
-  return (
-    <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-card p-8 lg:p-10 font-sans">
-      <div className="text-center mb-8">
-        <h2 className="font-serif text-3xl font-medium text-foreground mb-2">Log in to your account</h2>
-        <p className="text-muted-foreground text-sm">Enter your credentials to access your ERP dashboard</p>
-      </div>
-
-      <form onSubmit={handleLoginSubmit} className="space-y-1.5">
-        
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Username</label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
-                placeholder="Enter your username"
-                className="h-12 pl-10 bg-secondary/50"
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Password</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value.replace(/\s/g, ''))}
-              placeholder="Enter your password"
-              className="h-12 pl-10 bg-secondary/50 pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-2 pt-2">
-            <label className="text-sm font-medium text-foreground">Security Check</label>
-            <div className="flex items-center gap-3">
-                <div className="relative border border-border rounded-md overflow-hidden bg-muted/20 select-none">
-                    <canvas 
-                        ref={canvasRef} 
-                        width="140" 
-                        height="48" 
-                        className="cursor-pointer"
-                        onClick={fetchCaptcha}
-                        title="Click to refresh captcha"
-                    />
-                </div>
-                <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="icon" 
-                    onClick={fetchCaptcha}
-                    className="shrink-0 h-12 w-12 border-border"
-                    title="Refresh Captcha"
-                >
-                    <RefreshCw size={18} />
-                </Button>
+                    <Button type="submit" disabled={isLoading} className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-bold">
+                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : "Verify & Login"}
+                    </Button>
+                    <Button type="button" variant="ghost" className="w-full" onClick={() => setStep("login")}>Back to Login</Button>
+                </form>
             </div>
+        ) : (
+            <div className="animate-in fade-in slide-in-from-left-4">
+                <div className="text-center mb-8">
+                    <h2 className="font-serif text-3xl font-medium text-gray-900 mb-2">Log in to your account</h2>
+                    <p className="text-gray-500 text-sm">Enter your credentials to access your ERP dashboard</p>
+                </div>
 
-            <Input
-                type="text"
-                value={captchaInput}
-                onChange={(e) => setCaptchaInput(e.target.value)}
-                placeholder="Type the characters above"
-                className="h-12 bg-secondary/50"
-            />
-        </div>
+                <form onSubmit={(e) => { e.preventDefault(); loginUser(); }} className="space-y-5">
+                    {/* Username */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Username</label>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Input 
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Enter your username" 
+                                className="pl-10 h-11 bg-gray-50" 
+                            />
+                        </div>
+                    </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox id="remember" className="border-border" />
-            <label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer select-none">
-              Remember me
-            </label>
-          </div>
-          <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
-            Forgot Password?
-          </a>
-        </div>
+                    {/* Password */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Password</label>
+                        <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                            <Input 
+                                type={showPassword ? "text" : "password"} 
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter your password" 
+                                className="pl-10 pr-10 h-11 bg-gray-50" 
+                            />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                    </div>
 
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-base mt-4"
-        >
-          {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Signing In...</> : "Sign In"}
-        </Button>
+                    {/* Captcha - NOW AUTO UPPERCASE */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Security Check</label>
+                        <div className="flex gap-2">
+                            <canvas 
+                                ref={canvasRef} 
+                                width="140" 
+                                height="44" 
+                                className="border border-gray-300 rounded bg-gray-100 cursor-pointer" 
+                                onClick={fetchCaptcha} 
+                                title="Click to refresh"
+                            />
+                            <Button type="button" variant="outline" size="icon" onClick={fetchCaptcha} className="h-11 w-11 shrink-0">
+                                <RefreshCw size={18} />
+                            </Button>
+                        </div>
+                        <Input 
+                            value={captchaInput}
+                            // THE FIX: .toUpperCase() added here
+                            onChange={(e) => setCaptchaInput(e.target.value.toUpperCase())}
+                            placeholder="Type the characters above" 
+                            className="h-11 bg-gray-50" 
+                        />
+                    </div>
 
-        <div className="flex items-center justify-center text-sm pt-4">
-            <span className="text-muted-foreground">Don't have an account?</span>
-            <a href="#" className="ml-1 text-primary hover:underline font-medium">Register</a>
-        </div>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="remember" />
+                            <label htmlFor="remember" className="text-sm text-gray-600">Remember me</label>
+                        </div>
+                        <a href="#" className="text-sm text-orange-600 font-medium hover:underline">Forgot Password?</a>
+                    </div>
 
-      </form>
+                    <Button type="submit" disabled={isLoading} className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-bold text-base mt-2 shadow-sm">
+                        {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Signing In...</> : "Sign In"}
+                    </Button>
+
+                    <div className="flex justify-between text-sm mt-4 text-orange-600 font-medium">
+                        <a href="#" className="hover:underline">Create Account</a>
+                        <a href="#" className="hover:underline">Need Help?</a>
+                    </div>
+                </form>
+            </div>
+        )}
     </div>
   );
 };

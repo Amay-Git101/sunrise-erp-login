@@ -20,15 +20,15 @@ const reviews = [
 
 const TrustSection = () => {
   return (
-    <section className="section-snap min-h-screen flex flex-col bg-background">
+    <section className="section-snap min-h-screen flex flex-col bg-white">
       <div className="flex-1 flex items-center">
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 w-full">
           {/* Header */}
           <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl lg:text-5xl font-medium text-foreground mb-4">
+            <h2 className="font-serif text-4xl lg:text-5xl font-medium text-gray-900 mb-4">
               Trusted Across Core Business Operations
             </h2>
-            <p className="font-sans text-muted-foreground text-lg max-w-xl mx-auto">
+            <p className="font-sans text-gray-500 text-lg max-w-xl mx-auto">
               How Sunrise Software Development supports tailored softwares, payroll, and transportation teams every day
             </p>
           </div>
@@ -45,49 +45,50 @@ const TrustSection = () => {
             {reviews.map((_, i) => (
               <div
                 key={i}
-                className="w-2 h-2 rounded-full bg-border"
+                className="w-2 h-2 rounded-full bg-gray-300"
               />
             ))}
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-surface-dark border-t border-divider-dark">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-6">
+      {/* Footer - FORCED BLACK BACKGROUND */}
+      <footer className="bg-black text-white border-t border-gray-800">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            
             {/* Left */}
             <div className="text-center lg:text-left">
-              <p className="font-sans text-sm text-surface-dark-foreground/60">
+              <p className="font-sans text-sm text-gray-400">
                 © 2025 Sunrise ERP. All rights reserved.
               </p>
-              <p className="font-serif text-xs text-surface-dark-foreground/40 italic mt-1">
+              <p className="font-serif text-xs text-gray-600 italic mt-1">
                 Building structure. Driving clarity.
               </p>
             </div>
 
             {/* Divider - Desktop */}
-            <div className="hidden lg:block w-px h-10 bg-white/20" />
+            <div className="hidden lg:block w-px h-10 bg-gray-800" />
 
             {/* Right */}
             <div className="flex items-center gap-6">
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
+                className="font-sans text-sm text-gray-400 hover:text-orange-500 transition-colors underline-reveal"
               >
                 Privacy
               </a>
-              <span className="text-white/40">•</span>
+              <span className="text-gray-700">•</span>
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
+                className="font-sans text-sm text-gray-400 hover:text-orange-500 transition-colors underline-reveal"
               >
                 Terms
               </a>
-              <span className="text-white/40">•</span>
+              <span className="text-gray-700">•</span>
               <a
                 href="#"
-                className="font-sans text-sm text-surface-dark-foreground/60 hover:text-primary transition-colors underline-reveal"
+                className="font-sans text-sm text-gray-400 hover:text-orange-500 transition-colors underline-reveal"
               >
                 Help
               </a>

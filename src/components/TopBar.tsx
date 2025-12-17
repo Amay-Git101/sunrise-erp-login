@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, AlertCircle, LogOut } from "lucide-react"; 
+import { useUsers, Company } from "@/hooks/useUsers";
+import { useNavigate } from "react-router-dom"; // <--- 1. Import Navigate
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,25 +13,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Mock Data Interface
-interface Company {
-  cId: number;
-  companyName: string;
-}
-
 const TopBar = () => {
-  // We skip the API hook for now to focus on UI
+  const navigate = useNavigate(); // <--- 2. Initialize Hook
+  const { fetchCompanies } = useUsers();
+  
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // --- LOGOUT LOGIC ---
+  const handleLogout = () => {
+    // 1. Clear the token
+    localStorage.removeItem("authToken");
+    // 2. Redirect to Login Page
+    navigate("/login");
+  };
 
   useEffect(() => {
-    // Force Mock Data immediately
-    const mockData = [
-      { cId: 1, companyName: "Sunrise Head Office" },
-      { cId: 2, companyName: "Sunrise Branch 1" }
-    ];
-    setCompanies(mockData);
-    setSelectedCompanyId(mockData[0].cId);
+    const load = async () => {
+        setIsLoading(true);
+        try {
+            const data = await fetchCompanies();
+            if (Array.isArray(data) && data.length > 0) {
+                setCompanies(data);
+                setSelectedCompanyId(data[0].cId);
+            } else {
+                setCompanies([]);
+            }
+        } catch (e) {
+            console.error("Failed to load companies", e);
+            setCompanies([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    load();
   }, []);
 
   return (
@@ -48,7 +66,7 @@ const TopBar = () => {
       {/* Right: Actions */}
       <div className="flex items-center gap-4">
         
-        {/* Financial Year Selector */}
+        {/* Financial Year */}
         <div className="hidden md:flex items-center bg-gray-50 px-3 py-1.5 rounded-md border border-gray-100">
           <span className="text-[10px] text-gray-500 mr-2 uppercase font-bold tracking-wider">Year</span>
           <select className="bg-transparent text-sm font-semibold text-gray-700 focus:outline-none cursor-pointer">
@@ -57,18 +75,30 @@ const TopBar = () => {
           </select>
         </div>
 
-        {/* Company Selector (Mocked) */}
-        <div className="hidden md:flex items-center bg-amber-50 px-3 py-1.5 rounded-md border border-amber-100 min-w-[180px]">
-          <span className="text-[10px] text-amber-600 mr-2 uppercase font-bold tracking-wider">Company</span>
-          <select 
-              value={selectedCompanyId} 
-              onChange={(e) => setSelectedCompanyId(e.target.value)}
-              className="bg-transparent text-sm font-bold text-amber-900 focus:outline-none cursor-pointer w-full max-w-[200px]"
-          >
-              {companies.map(c => (
-                  <option key={c.cId} value={c.cId}>{c.companyName}</option>
-              ))}
-          </select>
+        {/* Company Selector */}
+        <div className={`hidden md:flex items-center px-3 py-1.5 rounded-md border min-w-[180px] transition-colors ${companies.length === 0 ? "bg-red-50 border-red-100" : "bg-amber-50 border-amber-100"}`}>
+          <span className={`text-[10px] mr-2 uppercase font-bold tracking-wider ${companies.length === 0 ? "text-red-500" : "text-amber-600"}`}>
+            Company
+          </span>
+          
+          {isLoading ? (
+             <span className="text-sm font-medium text-amber-800 animate-pulse">Loading...</span>
+          ) : companies.length > 0 ? (
+            <select 
+                value={selectedCompanyId} 
+                onChange={(e) => setSelectedCompanyId(e.target.value)}
+                className="bg-transparent text-sm font-bold text-amber-900 focus:outline-none cursor-pointer w-full max-w-[200px]"
+            >
+                {companies.map(c => (
+                    <option key={c.cId} value={c.cId}>{c.companyName}</option>
+                ))}
+            </select>
+          ) : (
+            <div className="flex items-center text-red-600 text-sm font-bold cursor-not-allowed">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                <span>No Access</span>
+            </div>
+          )}
         </div>
 
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
@@ -94,7 +124,16 @@ const TopBar = () => {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600">Log out</DropdownMenuItem>
+            
+            {/* LOGOUT BUTTON */}
+            <DropdownMenuItem 
+                onClick={handleLogout} 
+                className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+            >
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+            </DropdownMenuItem>
+            
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

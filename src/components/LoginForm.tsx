@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/config"; // <--- IMPORT CONFIG
 
 const LoginForm = () => {
-  // --- CONFIGURATION ---
-  const API_BASE_URL = "http://localhost:5162"; 
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -134,9 +133,30 @@ const LoginForm = () => {
     }
   };
 
+  // --- FIXED: ROBUST TOKEN SAVING ---
   const handleLoginSuccess = (result: any) => {
-    localStorage.setItem("authToken", result.token);
-    localStorage.setItem("userInfo", JSON.stringify(result.data));
+    console.log("Login Response Debug:", result); // <--- Check Console for this!
+
+    // 1. Check all possible locations for the token
+    const token = result.token || result.data?.token || result.data?.jwt;
+
+    if (!token) {
+        console.error("CRITICAL ERROR: No token found in response", result);
+        toast({ 
+            title: "Login Error", 
+            description: "Server did not return an authentication token.", 
+            variant: "destructive" 
+        });
+        return;
+    }
+
+    // 2. Save Valid Token
+    localStorage.setItem("authToken", token);
+    
+    // 3. Save User Info
+    const userData = result.data || result.user || {};
+    localStorage.setItem("userInfo", JSON.stringify(userData));
+
     toast({ title: "Welcome back!", description: "Redirecting to dashboard..." });
     navigate("/dashboard");
   };

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Users, Scissors, Ruler, TrendingUp, ShoppingBag, 
   Filter, Download, CreditCard, Clock, CheckCircle2,
-  MoreHorizontal, Calendar
+  MoreHorizontal, Calendar, ArrowRightLeft
 } from "lucide-react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area
@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 // --- MOCK DATA ---
 const revenueData = [
@@ -31,7 +32,47 @@ const bookings = [
 ];
 
 const Dashboard = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"general" | "bookings" | "upcoming" | "pending">("general");
+
+  // --- SMART DATE LOGIC ---
+  // Default: Last 7 days
+  const today = new Date().toISOString().split('T')[0];
+  const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
+  const [fromDate, setFromDate] = useState(lastWeek);
+  const [toDate, setToDate] = useState(today);
+
+  // Validate Dates whenever they change
+  const handleDateChange = (type: 'from' | 'to', value: string) => {
+    if (type === 'from') {
+        if (value > toDate) {
+            // User picked a start date AFTER the end date
+            toast({
+                title: "Date Logic Correction",
+                description: "Start date cannot be after End date. We swapped them for you.",
+                variant: "default", // or "destructive" if you want red
+            });
+            setFromDate(toDate);
+            setToDate(value);
+        } else {
+            setFromDate(value);
+        }
+    } else {
+        if (value < fromDate) {
+             // User picked an end date BEFORE the start date
+             toast({
+                title: "Date Logic Correction",
+                description: "End date cannot be before Start date. We swapped them for you.",
+                variant: "default",
+            });
+            setToDate(fromDate);
+            setFromDate(value);
+        } else {
+            setToDate(value);
+        }
+    }
+  };
 
   // --- 1. GENERAL TAB ---
   const GeneralView = () => (
@@ -110,25 +151,42 @@ const Dashboard = () => {
     </div>
   );
 
-  // --- 2. BOOKINGS / LIST VIEW (The Specific Fix) ---
+  // --- 2. BOOKINGS / LIST VIEW ---
   const BookingsView = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-8 duration-500">
       
-      {/* FILTER BAR: Compact on mobile */}
+      {/* FILTER BAR: Smart Dates */}
       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-4 justify-between lg:items-center">
          
-         {/* Inputs stack full width on mobile */}
-         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full lg:w-auto">
+         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full lg:w-auto items-end">
             <div className="relative w-full">
-                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-                <Input type="date" className="pl-9 w-full" />
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">From</label>
+                <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input 
+                        type="date" 
+                        value={fromDate} 
+                        onChange={(e) => handleDateChange('from', e.target.value)}
+                        className="pl-9 w-full bg-gray-50 border-gray-200" 
+                    />
+                </div>
             </div>
+            
             <div className="relative w-full">
-                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-                <Input type="date" className="pl-9 w-full" />
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block">To</label>
+                <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Input 
+                        type="date" 
+                        value={toDate} 
+                        onChange={(e) => handleDateChange('to', e.target.value)}
+                        className="pl-9 w-full bg-gray-50 border-gray-200" 
+                    />
+                </div>
             </div>
-            <Button variant="outline" className="text-gray-600 border-dashed border-gray-300 w-full">
-                <Filter className="w-4 h-4 mr-2"/> Filters
+
+            <Button variant="outline" className="text-gray-600 border-dashed border-gray-300 w-full hover:border-gray-400">
+                <Filter className="w-4 h-4 mr-2"/> Apply Filters
             </Button>
          </div>
 
@@ -144,10 +202,8 @@ const Dashboard = () => {
          </div>
       </div>
 
-      {/* TABLE CONTAINER: This is the fix. overflow-hidden on parent, overflow-x-auto on child */}
+      {/* TABLE */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        
-        {/* THIS DIV enables the inner scrolling without moving the whole page */}
         <div className="overflow-x-auto w-full">
             <table className="w-full text-sm text-left whitespace-nowrap min-w-[600px]">
                 <thead className="bg-gray-50/80 text-gray-500 font-semibold border-b border-gray-100">
@@ -192,8 +248,8 @@ const Dashboard = () => {
   );
 
   return (
-    // FIX 1: max-w-[100vw] and overflow-x-hidden prevents the body from scrolling sideways
-    <div className="p-4 md:p-8 space-y-8 min-h-screen bg-gray-50/30 w-full max-w-[100vw] overflow-x-hidden">
+    // FIX 1: pt-24 ensures the title isn't hidden behind the fixed header
+    <div className="p-4 md:p-8 pt-24 space-y-8 min-h-screen bg-gray-50/30 w-full max-w-[100vw] overflow-x-hidden">
       
       {/* HEADER */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -202,7 +258,7 @@ const Dashboard = () => {
            <p className="text-gray-500 mt-1 text-sm md:text-base">Overview of your tailoring business</p>
         </div>
         
-        {/* TABS - Scrollable container for tabs only */}
+        {/* TABS */}
         <div className="overflow-x-auto pb-1 -mx-4 px-4 xl:mx-0 xl:px-0">
             <div className="bg-white p-1 rounded-xl md:rounded-full border shadow-sm inline-flex whitespace-nowrap">
                 {['general', 'bookings', 'upcoming', 'pending'].map((tab) => (
